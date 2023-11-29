@@ -44,10 +44,15 @@ var rays = std.BoundedArray(Ray, 384).init(0) catch {};
 
 export fn start() void {
     w4.palette(.{
-        0x000000, // BLACK
-        0xFF0000, // RED
-        0xFFFFFF, // WHITE
-        0x0000FF, // BLUE
+        // 0x000000, // BLACK
+        // 0xFF0000, // RED
+        // 0xFFFFFF, // WHITE
+        // 0x0000FF, // BLUE
+
+        0x405273,
+        0xb55945,
+        0xf1f6f0,
+        0x6c81a1,
     });
 
     for (1..(worldWidth - 1)) |x| {
@@ -60,13 +65,20 @@ export fn start() void {
         world[y * worldHeight + (worldWidth - 2)].exist = true;
     }
 
+    toggle(38, 36);
+    toggle(38, 43);
+    toggle(38, 51);
+    toggle(38, 59);
+    toggle(38, 100);
     toggle(80, 80);
-    toggle(80, 88);
-    toggle(80, 80);
-    toggle(80, 88);
-
-    toggle(30, 40);
+    toggle(84, 92);
+    toggle(84, 35);
+    toggle(75, 58);
+    toggle(84, 58);
+    toggle(91, 58);
+    toggle(99, 58);
     toggle(100, 70);
+    toggle(115, 120);
 
     updateEdges(0, 0, worldWidth);
 }
@@ -78,6 +90,10 @@ fn toggle(x: i32, y: i32) void {
 
 export fn update() void {
     mouse.update();
+
+    if (mouse.released(w4.MOUSE_MIDDLE)) {
+        w4.tracef("%d %d", mouse.x, mouse.y);
+    }
 
     if (mouse.held(w4.MOUSE_RIGHT)) {
         castRays(mouse.x, mouse.y, 1000);
@@ -93,19 +109,42 @@ export fn update() void {
     draw();
 }
 
-fn triangle(x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32) void {
-    w4.line(x1, y1, x2, y2);
-    w4.line(x1, y1, x3, y3);
-    w4.line(x2, y2, x3, y3);
+fn cross(x1: i32, y1: i32, x2: i32, y2: i32) f32 {
+    return @as(f32, @floatFromInt(x1)) * @as(f32, @floatFromInt(y2)) - @as(f32, @floatFromInt(y1)) * @as(f32, @floatFromInt(x2));
+}
+
+fn triangle(x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32, c: u16) void {
+    const max_x: usize = @intCast(@max(x1, @max(x2, x3)));
+    const min_x: usize = @intCast(@min(x1, @min(x2, x3)));
+    const max_y: usize = @intCast(@max(y1, @max(y2, y3)));
+    const min_y: usize = @intCast(@min(y1, @min(y2, y3)));
+
+    const vs1 = [2]i32{ x2 - x1, y2 - y1 };
+    const vs2 = [2]i32{ x3 - x1, y3 - y1 };
+
+    w4.color(c);
+
+    for (min_x..max_x) |x| {
+        for (min_y..max_y) |y| {
+            const q = [2]i32{
+                @as(i32, @intCast(x)) - x1,
+                @as(i32, @intCast(y)) - y1,
+            };
+
+            const s = cross(q[0], q[1], vs2[0], vs2[1]) / cross(vs1[0], vs1[1], vs2[0], vs2[1]);
+            const t = cross(vs1[0], vs1[1], q[0], q[1]) / cross(vs1[0], vs1[1], vs2[0], vs2[1]);
+
+            if ((s >= 0) and (t >= 0) and (s + t <= 1)) {
+                w4.pixel(@intCast(x), @intCast(y));
+            }
+        }
+    }
 }
 
 fn draw() void {
     w4.clear(1);
 
     if (mouse.held(w4.MOUSE_RIGHT) and rays.len > 1) {
-        w4.color(WHITE);
-        w4.circle(mouse.x, mouse.y, 4);
-
         w4.color(WHITE);
         for (0..(rays.len - 1)) |i| {
             const p1 = rays.get(i);
@@ -116,7 +155,7 @@ fn draw() void {
             const p2x: i32 = @intFromFloat(p2[1]);
             const p2y: i32 = @intFromFloat(p2[2]);
 
-            triangle(mouse.x, mouse.y, p1x, p1y, p2x, p2y);
+            triangle(mouse.x, mouse.y, p1x, p1y, p2x, p2y, WHITE);
         }
 
         const p0 = rays.get(0);
@@ -127,7 +166,9 @@ fn draw() void {
         const plx: i32 = @intFromFloat(pl[1]);
         const ply: i32 = @intFromFloat(pl[2]);
 
-        triangle(mouse.x, mouse.y, p0x, p0y, plx, ply);
+        triangle(mouse.x, mouse.y, p0x, p0y, plx, ply, WHITE);
+        w4.color(RED);
+        w4.circle(mouse.x, mouse.y, 4);
     }
 
     for (0..worldWidth) |x| {
