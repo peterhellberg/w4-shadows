@@ -5,10 +5,6 @@ var mouse = w4.Mouse{};
 
 const Ray = @Vector(3, f32);
 
-fn cmpRayAngle(_: void, a: Ray, b: Ray) bool {
-    return a[0] >= b[0];
-}
-
 const Edge = struct {
     sx: i32 = 0,
     sy: i32 = 0,
@@ -78,19 +74,6 @@ export fn start() void {
     updateEdges(0, 0, worldWidth);
 }
 
-fn toggle(x: i32, y: i32) void {
-    const i = blockIndex(x, y);
-    world[i].exist = !world[i].exist;
-}
-
-fn mouseInBounds() bool {
-    return inside(mouse.x, mouse.y, 20, 20, 140, 140);
-}
-
-fn inside(x: i32, y: i32, x1: i32, y1: i32, x2: i32, y2: i32) bool {
-    return (x1 <= x and x2 >= x and y1 <= y and y2 >= y);
-}
-
 export fn update() void {
     mouse.update();
 
@@ -106,7 +89,7 @@ export fn update() void {
         }
 
         if (mouse.held(w4.MOUSE_RIGHT)) {
-            castRays(mouse.x, mouse.y, 360);
+            castRays(mouse.x, mouse.y, 160);
         }
 
         if (mouse.released(w4.MOUSE_LEFT)) {
@@ -118,38 +101,6 @@ export fn update() void {
     }
 
     draw();
-}
-
-fn cross(x1: i32, y1: i32, x2: i32, y2: i32) f32 {
-    return @as(f32, @floatFromInt(x1)) * @as(f32, @floatFromInt(y2)) - @as(f32, @floatFromInt(y1)) * @as(f32, @floatFromInt(x2));
-}
-
-fn triangle(x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32, c: u16) void {
-    const max_x: usize = @intCast(@max(x1, @max(x2, x3)));
-    const min_x: usize = @intCast(@min(x1, @min(x2, x3)));
-    const max_y: usize = @intCast(@max(y1, @max(y2, y3)));
-    const min_y: usize = @intCast(@min(y1, @min(y2, y3)));
-
-    const vs1 = [2]i32{ x2 - x1, y2 - y1 };
-    const vs2 = [2]i32{ x3 - x1, y3 - y1 };
-
-    w4.color(c);
-
-    for (min_x..max_x) |x| {
-        for (min_y..max_y) |y| {
-            const q = [2]i32{
-                @as(i32, @intCast(x)) - x1,
-                @as(i32, @intCast(y)) - y1,
-            };
-
-            const s = cross(q[0], q[1], vs2[0], vs2[1]) / cross(vs1[0], vs1[1], vs2[0], vs2[1]);
-            const t = cross(vs1[0], vs1[1], q[0], q[1]) / cross(vs1[0], vs1[1], vs2[0], vs2[1]);
-
-            if ((s >= 0) and (t >= 0) and (s + t <= 1)) {
-                w4.pixel(@intCast(x), @intCast(y));
-            }
-        }
-    }
 }
 
 fn draw() void {
@@ -198,10 +149,58 @@ fn draw() void {
     }
 }
 
+fn triangle(x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32, c: u16) void {
+    const max_x: usize = @intCast(@max(x1, @max(x2, x3)));
+    const min_x: usize = @intCast(@min(x1, @min(x2, x3)));
+    const max_y: usize = @intCast(@max(y1, @max(y2, y3)));
+    const min_y: usize = @intCast(@min(y1, @min(y2, y3)));
+
+    const vs1 = [2]i32{ x2 - x1, y2 - y1 };
+    const vs2 = [2]i32{ x3 - x1, y3 - y1 };
+
+    w4.color(c);
+    for (min_x..max_x) |x| {
+        for (min_y..max_y) |y| {
+            const q = [2]i32{
+                @as(i32, @intCast(x)) - x1,
+                @as(i32, @intCast(y)) - y1,
+            };
+
+            const s = cross(q[0], q[1], vs2[0], vs2[1]) / cross(vs1[0], vs1[1], vs2[0], vs2[1]);
+            const t = cross(vs1[0], vs1[1], q[0], q[1]) / cross(vs1[0], vs1[1], vs2[0], vs2[1]);
+
+            if ((s >= 0) and (t >= 0) and (s + t <= 1)) {
+                w4.pixel(@intCast(x), @intCast(y));
+            }
+        }
+    }
+}
+
+fn toggle(x: i32, y: i32) void {
+    const i = blockIndex(x, y);
+    world[i].exist = !world[i].exist;
+}
+
+fn mouseInBounds() bool {
+    return inside(mouse.x, mouse.y, 20, 20, 140, 140);
+}
+
+fn inside(x: i32, y: i32, x1: i32, y1: i32, x2: i32, y2: i32) bool {
+    return (x1 <= x and x2 >= x and y1 <= y and y2 >= y);
+}
+
+fn cross(x1: i32, y1: i32, x2: i32, y2: i32) f32 {
+    return @as(f32, @floatFromInt(x1)) * @as(f32, @floatFromInt(y2)) - @as(f32, @floatFromInt(y1)) * @as(f32, @floatFromInt(x2));
+}
+
 fn blockIndex(x: i32, y: i32) usize {
     return @intCast(
         @divFloor(y, blockSize) * worldWidth + @divFloor(x, blockSize),
     );
+}
+
+fn cmpRayAngle(_: void, a: Ray, b: Ray) bool {
+    return a[0] >= b[0];
 }
 
 fn castRays(ox: i32, oy: i32, radius: f32) void {
