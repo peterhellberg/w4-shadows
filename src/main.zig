@@ -254,7 +254,7 @@ fn castRays(ox: i32, oy: i32, radius: f32) void {
                                     min_py - fy,
                                     min_px - fx,
                                 );
-                                is_valid = true;
+                                is_valid = (min_py > 0 and min_py < 160);
                             }
                         }
                     }
@@ -300,8 +300,8 @@ fn updateEdges(sx: usize, sy: usize, size: usize) void {
                         world[i].edge_exist[WEST] = true;
                     } else {
                         var edge = Edge{
-                            .sx = @intCast(sx + x * blockSize),
-                            .sy = @intCast(sy + y * blockSize),
+                            .sx = @intCast((sx + x) * blockSize),
+                            .sy = @intCast((sy + y) * blockSize),
                         };
 
                         edge.ex = edge.sx;
@@ -322,7 +322,7 @@ fn updateEdges(sx: usize, sy: usize, size: usize) void {
                     } else {
                         var edge = Edge{
                             .sx = @intCast((sx + x + 1) * blockSize),
-                            .sy = @intCast(sy + y * blockSize),
+                            .sy = @intCast((sy + y) * blockSize),
                         };
 
                         edge.ex = edge.sx;
@@ -342,8 +342,8 @@ fn updateEdges(sx: usize, sy: usize, size: usize) void {
                         world[i].edge_exist[NORTH] = true;
                     } else {
                         var edge = Edge{
-                            .sx = @intCast(sx + x * blockSize),
-                            .sy = @intCast(sy + y * blockSize),
+                            .sx = @intCast((sx + x) * blockSize),
+                            .sy = @intCast((sy + y) * blockSize),
                         };
 
                         edge.ex = edge.sx + blockSize;
@@ -363,7 +363,7 @@ fn updateEdges(sx: usize, sy: usize, size: usize) void {
                         world[i].edge_exist[SOUTH] = true;
                     } else {
                         var edge = Edge{
-                            .sx = @intCast(sx + x * blockSize),
+                            .sx = @intCast((sx + x) * blockSize),
                             .sy = @intCast((sy + y + 1) * blockSize),
                         };
 
