@@ -40,15 +40,10 @@ const worldHeight = worldWidth;
 var world: [worldWidth * worldHeight]Cell = .{.{}} ** (worldWidth * worldHeight);
 
 var edges = std.BoundedArray(Edge, 128).init(0) catch {};
-var rays = std.BoundedArray(Ray, 384).init(0) catch {};
+var rays = std.BoundedArray(Ray, 448).init(0) catch {};
 
 export fn start() void {
     w4.palette(.{
-        // 0x000000, // BLACK
-        // 0xFF0000, // RED
-        // 0xFFFFFF, // WHITE
-        // 0x0000FF, // BLUE
-
         0x405273,
         0xb55945,
         0xf1f6f0,
@@ -92,11 +87,17 @@ export fn update() void {
     mouse.update();
 
     if (mouse.released(w4.MOUSE_MIDDLE)) {
-        w4.tracef("%d %d", mouse.x, mouse.y);
+        w4.tracef(
+            "mouse: %dx%d edges: %d rays: %d",
+            mouse.x,
+            mouse.y,
+            @as(i32, @intCast(edges.len)),
+            @as(i32, @intCast(rays.len)),
+        );
     }
 
     if (mouse.held(w4.MOUSE_RIGHT)) {
-        castRays(mouse.x, mouse.y, 1000);
+        castRays(mouse.x, mouse.y, 360);
     }
 
     if (mouse.released(w4.MOUSE_LEFT)) {
@@ -230,7 +231,8 @@ fn castRays(ox: i32, oy: i32, radius: f32) void {
                     const sdy: f32 = @floatFromInt(e2.ey - e2.sy);
 
                     if (@abs(sdx - rdx) > 0 and @abs(sdy - rdy) > 0) {
-                        const t2: f32 = (rdx * (@as(f32, @floatFromInt(e2.sy)) - fy) + (rdy * (fx - @as(f32, @floatFromInt(e2.sx))))) / (sdx * rdy - sdy * rdx);
+                        const t2: f32 = (rdx * (@as(f32, @floatFromInt(e2.sy)) - fy) + (rdy *
+                            (fx - @as(f32, @floatFromInt(e2.sx))))) / (sdx * rdy - sdy * rdx);
                         const t1: f32 = (@as(f32, @floatFromInt(e2.sx)) + sdx * t2 - fx) / rdx;
 
                         if (t1 > 0 and t2 >= 0 and t2 <= 1) {
@@ -238,7 +240,11 @@ fn castRays(ox: i32, oy: i32, radius: f32) void {
                                 min_t1 = t1;
                                 min_px = fx + rdx * t1;
                                 min_py = fy + rdy * t1;
-                                min_ang = std.math.atan2(f32, min_py - fy, min_px - fx);
+                                min_ang = std.math.atan2(
+                                    f32,
+                                    min_py - fy,
+                                    min_px - fx,
+                                );
                                 is_valid = true;
                             }
                         }
@@ -252,9 +258,7 @@ fn castRays(ox: i32, oy: i32, radius: f32) void {
         }
     }
 
-    var x = rays.slice();
-
-    std.sort.insertion(Ray, x, {}, cmpRayAngle);
+    std.sort.insertion(Ray, rays.slice(), {}, cmpRayAngle);
 }
 
 fn updateEdges(sx: usize, sy: usize, size: usize) void {
