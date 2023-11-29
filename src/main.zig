@@ -83,28 +83,38 @@ fn toggle(x: i32, y: i32) void {
     world[i].exist = !world[i].exist;
 }
 
+fn mouseInBounds() bool {
+    return inside(mouse.x, mouse.y, 20, 20, 140, 140);
+}
+
+fn inside(x: i32, y: i32, x1: i32, y1: i32, x2: i32, y2: i32) bool {
+    return (x1 <= x and x2 >= x and y1 <= y and y2 >= y);
+}
+
 export fn update() void {
     mouse.update();
 
-    if (mouse.released(w4.MOUSE_MIDDLE)) {
-        w4.tracef(
-            "mouse: %dx%d edges: %d rays: %d",
-            mouse.x,
-            mouse.y,
-            @as(i32, @intCast(edges.len)),
-            @as(i32, @intCast(rays.len)),
-        );
-    }
+    if (mouseInBounds()) {
+        if (mouse.released(w4.MOUSE_MIDDLE)) {
+            w4.tracef(
+                "mouse: %dx%d edges: %d rays: %d",
+                mouse.x,
+                mouse.y,
+                @as(i32, @intCast(edges.len)),
+                @as(i32, @intCast(rays.len)),
+            );
+        }
 
-    if (mouse.held(w4.MOUSE_RIGHT)) {
-        castRays(mouse.x, mouse.y, 360);
-    }
+        if (mouse.held(w4.MOUSE_RIGHT)) {
+            castRays(mouse.x, mouse.y, 360);
+        }
 
-    if (mouse.released(w4.MOUSE_LEFT)) {
-        const i = blockIndex(mouse.x, mouse.y);
-        world[i].exist = !world[i].exist;
+        if (mouse.released(w4.MOUSE_LEFT)) {
+            const i = blockIndex(mouse.x, mouse.y);
+            world[i].exist = !world[i].exist;
 
-        updateEdges(0, 0, worldWidth);
+            updateEdges(0, 0, worldWidth);
+        }
     }
 
     draw();
@@ -145,7 +155,7 @@ fn triangle(x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32, c: u16) void {
 fn draw() void {
     w4.clear(1);
 
-    if (mouse.held(w4.MOUSE_RIGHT) and rays.len > 1) {
+    if (mouse.held(w4.MOUSE_RIGHT) and mouseInBounds() and rays.len > 1) {
         w4.color(WHITE);
         for (0..(rays.len - 1)) |i| {
             const p1 = rays.get(i);
