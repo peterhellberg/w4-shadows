@@ -182,7 +182,7 @@ fn toggle(x: i32, y: i32) void {
 }
 
 fn mouseInBounds() bool {
-    return inside(mouse.x, mouse.y, 20, 20, 140, 140);
+    return inside(mouse.x, mouse.y, 16, 16, 144, 144);
 }
 
 fn inside(x: i32, y: i32, x1: i32, y1: i32, x2: i32, y2: i32) bool {
