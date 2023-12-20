@@ -2,6 +2,7 @@ const std = @import("std");
 const w4 = @import("w4");
 
 var mouse = w4.Mouse{};
+var button = w4.Button{};
 
 const Ray = @Vector(3, f32);
 
@@ -76,6 +77,7 @@ export fn start() void {
 
 export fn update() void {
     mouse.update();
+    button.update();
 
     if (mouseInBounds()) {
         if (mouse.released(w4.MOUSE_MIDDLE)) {
@@ -88,7 +90,7 @@ export fn update() void {
             );
         }
 
-        if (mouse.held(w4.MOUSE_RIGHT)) {
+        if (mouse.held(w4.MOUSE_RIGHT) or button.held(0, w4.BUTTON_2)) {
             castRays(mouse.x, mouse.y, 160);
         }
 
@@ -106,7 +108,7 @@ export fn update() void {
 fn draw() void {
     w4.clear(1);
 
-    if (mouse.held(w4.MOUSE_RIGHT) and mouseInBounds() and rays.len > 1) {
+    if (shouldDrawRays()) {
         w4.color(WHITE);
         for (0..(rays.len - 1)) |i| {
             const p1 = rays.get(i);
@@ -147,6 +149,12 @@ fn draw() void {
         w4.pixel(e.sx, e.sy);
         w4.pixel(e.ex, e.ey);
     }
+}
+
+fn shouldDrawRays() bool {
+    return (mouse.held(w4.MOUSE_RIGHT) or
+        button.held(0, w4.BUTTON_2)) and
+        mouseInBounds() and rays.len > 1;
 }
 
 fn triangle(x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32, c: u16) void {
