@@ -34,7 +34,7 @@ const blockSize = 8;
 const worldWidth = 20;
 const worldHeight = worldWidth;
 
-var world: [worldWidth * worldHeight]Cell = .{.{}} ** (worldWidth * worldHeight);
+var world: [worldWidth * worldHeight]Cell = .{Cell{}} ** (worldWidth * worldHeight);
 
 var edges = std.BoundedArray(Edge, 128).init(0) catch {};
 var rays = std.BoundedArray(Ray, 448).init(0) catch {};
@@ -222,7 +222,7 @@ fn castRays(ox: i32, oy: i32, radius: f32) void {
             var rdx: f32 = @floatFromInt((if (i == 0) e1.sx else e1.ex) - ox);
             var rdy: f32 = @floatFromInt((if (i == 0) e1.sy else e1.ey) - oy);
 
-            const base_ang = std.math.atan2(f32, rdy, rdx);
+            const base_ang = std.math.atan2(rdy, rdx);
 
             var ang: f32 = 0;
 
@@ -258,7 +258,6 @@ fn castRays(ox: i32, oy: i32, radius: f32) void {
                                 min_px = fx + rdx * t1;
                                 min_py = fy + rdy * t1;
                                 min_ang = std.math.atan2(
-                                    f32,
                                     min_py - fy,
                                     min_px - fx,
                                 );
